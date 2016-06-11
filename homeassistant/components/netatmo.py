@@ -24,9 +24,6 @@ NETATMO_AUTH = None
 
 _LOGGER = logging.getLogger(__name__)
 
-DISCOVER_SENSORS = 'netatmo.sensors'
-DISCOVER_CAMERAS = 'netatmo.cameras'
-
 
 def setup(hass, config):
     """Setup the Netatmo devices."""
@@ -54,9 +51,7 @@ def setup(hass, config):
             "Please check your settings for NatAtmo API.")
         return False
 
-    for component, discovery_service in (
-            ('camera', DISCOVER_CAMERAS), ('sensor', DISCOVER_SENSORS)):
-        discovery.discover(hass, discovery_service, component=component,
-                           hass_config=config)
+    for component in 'camera', 'sensor':
+        discovery.load_platform(hass, component, DOMAIN, None, config)
 
     return True

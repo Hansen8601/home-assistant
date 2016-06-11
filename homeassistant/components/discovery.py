@@ -22,25 +22,18 @@ SCAN_INTERVAL = 300  # seconds
 LOAD_PLATFORM = 'load_platform'
 
 SERVICE_WEMO = 'belkin_wemo'
-SERVICE_HUE = 'philips_hue'
-SERVICE_CAST = 'google_cast'
 SERVICE_NETGEAR = 'netgear_router'
-SERVICE_SONOS = 'sonos'
-SERVICE_PLEX = 'plex_mediaserver'
-SERVICE_SQUEEZEBOX = 'logitech_mediaserver'
-SERVICE_PANASONIC_VIERA = 'panasonic_viera'
-SERVICE_ROKU = 'roku'
 
 SERVICE_HANDLERS = {
-    SERVICE_WEMO: "wemo",
-    SERVICE_CAST: "media_player",
-    SERVICE_HUE: "light",
-    SERVICE_NETGEAR: 'device_tracker',
-    SERVICE_SONOS: 'media_player',
-    SERVICE_PLEX: 'media_player',
-    SERVICE_SQUEEZEBOX: 'media_player',
-    SERVICE_PANASONIC_VIERA: 'media_player',
-    SERVICE_ROKU: 'media_player',
+    SERVICE_NETGEAR: ('device_tracker', None),
+    SERVICE_WEMO: ('wemo', None),
+    'philips_hue': ('light', 'hue'),
+    'google_cast': ('media_player', 'cast'),
+    'panasonic_viera': ('media_player', 'panasonic_viera'),
+    'plex_mediaserver': ('media_player', 'plex'),
+    'roku': ('media_player', 'roku'),
+    'sonos': ('media_player', 'sonos'),
+    'logitech_mediaserver': ('media_player', 'squeezebox'),
 }
 
 
@@ -99,6 +92,7 @@ def load_platform(hass, component, platform, info=None, hass_config=None):
         info = {LOAD_PLATFORM: platform}
     else:
         info[LOAD_PLATFORM] = platform
+
     discover(hass, LOAD_PLATFORM + '.' + component, info, component,
              hass_config)
 
@@ -119,20 +113,18 @@ def setup(hass, config):
         with lock:
             logger.info("Found new service: %s %s", service, info)
 
-            component = SERVICE_HANDLERS.get(service)
+            info = SERVICE_HANDLERS.get(service)
 
             # We do not know how to handle this service.
-            if not component:
+            if not info:
                 return
 
-            # This component cannot be setup.
-            if not bootstrap.setup_component(hass, component, config):
-                return
+            component, platform = info
 
-            hass.bus.fire(EVENT_PLATFORM_DISCOVERED, {
-                ATTR_SERVICE: service,
-                ATTR_DISCOVERED: info
-            })
+            if platform is None:
+                discover(hass, service, info, config)
+            else:
+                load_platform(hass, component, platform, info, config)
 
     # pylint: disable=unused-argument
     def start_discovery(event):

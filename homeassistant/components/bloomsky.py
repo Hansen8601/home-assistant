@@ -23,10 +23,6 @@ _LOGGER = logging.getLogger(__name__)
 # no point in polling the API more frequently
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
 
-DISCOVER_SENSORS = 'bloomsky.sensors'
-DISCOVER_BINARY_SENSORS = 'bloomsky.binary_sensor'
-DISCOVER_CAMERAS = 'bloomsky.camera'
-
 
 # pylint: disable=unused-argument,too-few-public-methods
 def setup(hass, config):
@@ -45,11 +41,8 @@ def setup(hass, config):
     except RuntimeError:
         return False
 
-    for component, discovery_service in (
-            ('camera', DISCOVER_CAMERAS), ('sensor', DISCOVER_SENSORS),
-            ('binary_sensor', DISCOVER_BINARY_SENSORS)):
-        discovery.discover(hass, discovery_service, component=component,
-                           hass_config=config)
+    for component in 'camera', 'binary_sensor', 'sensor':
+        discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     return True
 

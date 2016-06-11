@@ -20,8 +20,7 @@ class EntityComponent(object):
     # pylint: disable=too-many-instance-attributes
     # pylint: disable=too-many-arguments
     def __init__(self, logger, domain, hass,
-                 scan_interval=DEFAULT_SCAN_INTERVAL,
-                 discovery_platforms=None, group_name=None):
+                 scan_interval=DEFAULT_SCAN_INTERVAL, group_name=None):
         """Initialize an entity component."""
         self.logger = logger
         self.hass = hass
@@ -29,7 +28,6 @@ class EntityComponent(object):
         self.domain = domain
         self.entity_id_format = domain + '.{}'
         self.scan_interval = scan_interval
-        self.discovery_platforms = discovery_platforms
         self.group_name = group_name
 
         self.entities = {}
@@ -54,21 +52,13 @@ class EntityComponent(object):
         for p_type, p_config in config_per_platform(config, self.domain):
             self._setup_platform(p_type, p_config)
 
-        if self.discovery_platforms:
-            # Discovery listener for all items in discovery_platforms array
-            # passed from a component's setup method (e.g. light/__init__.py)
-            discovery.listen(
-                self.hass, self.discovery_platforms.keys(),
-                lambda service, info:
-                self._setup_platform(self.discovery_platforms[service], {},
-                                     info))
-
         # Generic discovery listener for loading platform dynamically
         # Refer to: homeassistant.components.discovery.load_platform()
         def load_platform_callback(service, info):
             """Callback to load a platform."""
             platform = info.pop(discovery.LOAD_PLATFORM)
             self._setup_platform(platform, {}, info if info else None)
+
         discovery.listen(self.hass, discovery.LOAD_PLATFORM + '.' +
                          self.domain, load_platform_callback)
 
